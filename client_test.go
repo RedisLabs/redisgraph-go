@@ -295,3 +295,19 @@ func TestCreateIndex(t *testing.T) {
 	_, err = graph.Query("DROP INDEX ON :user(name)")
 	assert.Equal(t, err.Error(), "ERR Unable to drop index on :user(name): no such index.")
 }
+
+func TestTimeout(t *testing.T) {
+	createGraph()
+
+	// Issue a long-running query with a 1-millisecond timeout.
+	res, err := graph.Query("UNWIND range(0, 100) AS iter WITH iter MATCH (a), (b), (c) RETURN *", 1)
+	assert.Nil(t, res)
+	assert.NotNil(t, err)
+
+	params := make(map[string]interface{})
+	params["ub"] = 100
+	res, err = graph.ParameterizedQuery("UNWIND range(0, $ub) AS iter WITH iter MATCH (a), (b), (c) RETURN *", params, 1);
+	assert.Nil(t, res)
+	assert.NotNil(t, err)
+
+}

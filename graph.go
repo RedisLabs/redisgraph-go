@@ -98,9 +98,14 @@ func (g *Graph) Commit() (*QueryResult, error) {
 }
 
 // Query executes a query against the graph.
-func (g *Graph) Query(q string) (*QueryResult, error) {
-	
-	r, err := g.Conn.Do("GRAPH.QUERY", g.Id, q, "--compact")
+func (g *Graph) Query(q string, timeout ...int)(*QueryResult, error) {
+	var r interface{}
+	var err error
+	if len(timeout) > 0 {
+		r, err = g.Conn.Do("GRAPH.QUERY", g.Id, q, "--compact", "timeout", timeout[0])
+	} else {
+		r, err = g.Conn.Do("GRAPH.QUERY", g.Id, q, "--compact")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +113,11 @@ func (g *Graph) Query(q string) (*QueryResult, error) {
 	return QueryResultNew(g, r)
 }
 
-func (g *Graph) ParameterizedQuery(q string, params map[string]interface{}) (*QueryResult, error) {
+func (g *Graph) ParameterizedQuery(q string, params map[string]interface{}, timeout ...int) (*QueryResult, error) {
 	if(params != nil){
 		q = BuildParamsHeader(params) + q
 	}
-	return g.Query(q);
+	return g.Query(q, timeout...);
 }
 
 // Merge pattern
